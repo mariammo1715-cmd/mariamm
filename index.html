@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>معرض رسم</title>
+  <style>
+    :root {
+      --bg: #f8f9fa; --card: #ffffff; --text: #212529; --text-muted: #6c757d;
+      --primary: #4361ee; --primary-hover: #3a56d4; --border: #dee2e6; --shadow: 0 2px 8px rgba(0,0,0,0.08); --radius: 12px;
+    }
+    [data-theme="داكن"] { --bg:#121212; --card:#1e1e1e; --text:#e0e0e0; --text-muted:#a0a0a0; --border:#333; --shadow:0 2px 8px rgba(0,0,0,0.3); }
+    [data-theme="كريمي"] { --bg:#fdf5e6; --card:#fff8dc; --text:#4a3f35; --text-muted:#7a6b5f; --border:#e6d5b8; }
+    [data-theme="خوخي"] { --bg:#fff0f0; --card:#ffe5e5; --text:#4a3030; --text-muted:#7a5b5b; --border:#ffcccc; }
+    [data-theme="أزرق فاتح"] { --bg:#e6f2ff; --card:#d4e6ff; --text:#1a365d; --text-muted:#4a6b8a; --border:#b3d1ff; }
+    [data-theme="أزرق"] { --bg:#001f3f; --card:#003366; --text:#e6f2ff; --text-muted:#99c2ff; --border:#004d99; }
+
+    * { box-sizing: border-box; margin:0; padding:0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background: var(--bg); color: var(--text); transition: 0.3s; min-height:100vh; padding-bottom: 70px; }
+    
+    header { background: var(--card); padding: 15px; border-bottom: 1px solid var(--border); position: sticky; top:0; z-index: 100; display:flex; justify-content:space-between; align-items:center; }
+    .search-box { flex:1; max-width:400px; margin:0 10px; position: relative; }
+    .search-box input { width:100%; padding:10px 15px; border:1px solid var(--border); border-radius:25px; background:var(--bg); color:var(--text); outline:none; }
+    
+    nav { display:flex; justify-content:space-around; background:var(--card); border-top:1px solid var(--border); position:fixed; bottom:0; width:100%; padding:10px 0; z-index:100; }
+    nav button { background:none; border:none; color:var(--text); font-size:14px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:4px; }
+    nav button.active { color:var(--primary); }
+
+    .section { display:none; padding:15px; max-width:600px; margin:0 auto; }
+    .section.active { display:block; }
+
+    .card { background:var(--card); border-radius:var(--radius); padding:15px; margin-bottom:15px; box-shadow:var(--shadow); }
+    
+    /* Styles for Search Results */
+    #searchResults { position: absolute; top: 100%; right: 0; left: 0; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); margin-top: 5px; max-height: 300px; overflow-y: auto; display: none; box-shadow: var(--shadow); z-index: 200; }
+    .search-item { padding: 10px 15px; border-bottom: 1px solid var(--border); cursor: pointer; display: flex; align-items: center; gap: 10px; }
+    .search-item:hover { background: var(--bg); }
+    .search-item:last-child { border-bottom: none; }
+    
+    /* Profile Styles */
+    .profile-header { text-align: center; padding: 20px 0; }
+    .avatar-large { width: 80px; height: 80px; border-radius: 50%; background: var(--primary); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 32px; margin: 0 auto 10px; }
+    .profile-stats { display: flex; justify-content: space-around; margin: 20px 0; }
+    .stat-box { cursor: pointer; }
+    .stat-box strong { display: block; font-size: 18px; }
+    .profile-actions { display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; }
+    .btn { padding: 8px 20px; border-radius: 20px; cursor: pointer; font-weight: bold; border: none; }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-outline { border: 1px solid var(--border); background: transparent; color: var(--text); }
+    
+    /* Posts Grid */
+    .posts-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
+    .post-item { aspect-ratio: 1; background: var(--bg); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--text-muted); font-size: 24px; }
+
+    /* Modal */
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
+    .modal.open { display: flex; }
+    .modal-content { background: var(--card); width: 90%; max-width: 400px; border-radius: var(--radius); padding: 20px; max-height: 80vh; overflow-y: auto; position: relative; }
+    .close-modal { position: absolute; top: 10px; left: 10px; background: none; border: none; font-size: 20px; cursor: pointer; }
+
+    .theme-switcher { display:flex; gap:5px; flex-wrap:wrap; margin-top:10px; }
+    .theme-btn { padding:4px 8px; border:1px solid var(--border); border-radius:12px; background:var(--bg); cursor:pointer; }
+    
+    /* Login Form */
+    .auth-container { max-width: 400px; margin: 20px auto; }
+    .auth-container input { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--text); }
+  </style>
+</head>
+<body data-theme="افتراضي">
+
+  <header>
+    <h2>معرض رسم </h2>
+    <div class="search-box">
+      <input type="text" id="searchInput" placeholder="🔍 بحث عن مستخدم...">
+      <div id="searchResults"></div>
+    </div>
+  </header>
+
+  <main>
+    <!-- الصفحة الرئيسية -->
+    <div id="home" class="section active">
+      <div class="card">
+        <h3>مرحباً بك في معرض رسم</h3>
+        <p style="color:var(--text-muted); margin-top:5px;">تفاصيل الموقع</p>
+      </div>
+      <div id="feedPosts"></div>
+    </div>
+
+    <!-- الرسائل -->
+    <div id="messages" class="section">
+      <h3>الرسائل</h3>
+      <div class="card" style="margin-top:10px;">لا توجد محادثات بعد</div>
+    </div>
+
+    <!-- المفضلة -->
+    <div id="favorites" class="section">
+      <h3>❤️ المفضلة</h3>
+      <div class="card" style="margin-top:10px;">لم تضف أي منشورات للمفضلة</div>
+    </div>
+
+    <!-- حسابي / البروفايل -->
+    <div id="account" class="section">
+      <div class="card profile-header">
+        <div class="avatar-large" id="pAvatar">أ</div>
+        <h2 id="pName">اسم المستخدم</h2>
+        <p id="pBio" style="color:var(--text-muted);">الموقع الرسمي</p>
+        
+        <div class="profile-stats">
+          <div class="stat-box" onclick="showList('followers')">
+            <strong id="pFollowers">0</strong>متابعين
+          </div>
+          <div class="stat-box" onclick="showList('following')">
+            <strong id="pFollowing">0</strong>يتابع
+          </div>
+          <div class="stat-box">
+            <strong id="pPostsCount">0</strong>منشور
+          </div>
+        </div>
+
+        <div class="profile-actions">
+          <button id="btnFollow" class="btn btn-primary" onclick="toggleFollow()">متابعة</button>
+          <button class="btn btn-outline" onclick="openChat()">مراسلة</button>
+        </div>
+      </div>
+
+      <h3 style="margin-bottom:10px;">المنشورات</h3>
+      <div class="posts-grid" id="profilePostsGrid"></div>
+    </div>
+  </main>
+
+  <nav>
+    <button class="active" onclick="switchTab('home')"><span>🏠</span>الرئيسية</button>
+    <button onclick="switchTab('messages')"><span>💬</span>الرسائل</button>
+    <button onclick="switchTab('favorites')"><span>❤️</span>المفضلة</button>
+    <button onclick="switchTab('account')"><span>👤</span>حسابي</button>
+  </nav>
+
+  <!-- Modal for Followers/Following List -->
+  <div id="listModal" class="modal">
+    <div class="modal-content">
+      <button class="close-modal" onclick="closeModal()">✕</button>
+      <h3 id="listTitle">القائمة</h3>
+      <div id="listContent"></div>
+    </div>
+  </div>
+
+  <!-- Modal for Login -->
+  <div id="loginModal" class="modal">
+    <div class="modal-content">
+      <button class="close-modal" onclick="document.getElementById('loginModal').classList.remove('open')">✕</button>
+      <h3>تسجيل الدخول</h3>
+      <div class="auth-container">
+        <input type="email" placeholder="البريد الإلكتروني">
+        <input type="password" placeholder="كلمة المرور">
+        <button class="btn btn-primary" style="width:100%">دخول</button>
+        <p style="text-align:center; margin:10px 0;">أو</p>
+        <h3>إنشاء حساب جديد</h3>
+        <input type="text" placeholder="الاسم">
+        <input type="email" placeholder="البريد الإلكتروني">
+        <input type="password" placeholder="كلمة المرور">
+        <button class="btn btn-primary" style="width:100%">إنشاء</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // === بيانات تجريبية ===
+    const currentUser = { id: 0, name: "أنا", avatar: "أ", followers: [], following: [], posts: [], bio: "مستخدم جديد" };
+    
+    let users = [
+      { id: 1, name: "مريم", avatar: "م", followers: [], following: [], posts: [], bio: "رسامة محترفة" },
+      { id: 2, name: "ميري", avatar: "م", followers: [], following: [], posts: [], bio: "مصممة جرافيك" },
+      { id: 3, name: "أحمد", avatar: "أ", followers: [], following: [], posts: [1], bio: "عاشق الفن" },
+      { id: 4, name: "سارة", avatar: "س", followers: [], following: [], posts: [2, 3], bio: "فنانة تشكيلية" }
+    ];
+
+    let posts = [
+      { id: 1, authorId: 3, content: "لوحة زيتية جميلة 🎨" },
+      { id: 2, authorId: 4, content: "سكتش سريع ️" },
+      { id: 3, authorId: 4, content: "رسم رقمي 💻" }
+    ];
+
+    let viewingUser = currentUser; // المستخدم الذي نعرض ملفه حالياً
+    let isFollowingViewingUser = false; // حالة المتابعة للمستخدم المعروض
+
+    // === البحث ===
+    const searchInput = document.getElementById('searchInput');
+    const searchResults = document.getElementById('searchResults');
+
+    searchInput.addEventListener('input', function(e) {
+      const query = e.target.value.toLowerCase();
+      if (query.length === 0) {
+        searchResults.style.display = 'none';
+        return;
+      }
+
+      const matches = users.filter(u => u.name.toLowerCase().includes(query));
+      renderSearchResults(matches);
+    });
+
+    function renderSearchResults(matches) {
+      searchResults.innerHTML = '';
+      if (matches.length === 0) {
+        searchResults.innerHTML = '<div style="padding:10px; text-align:center; color:var(--text-muted)">لا توجد نتائج</div>';
+        searchResults.style.display = 'block';
+        return;
+      }
+
+      matches.forEach(user => {
+        const div = document.createElement('div');
+        div.className = 'search-item';
+        div.innerHTML = `
+          <div style="width:40px;height:40px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;">${user.avatar}</div>
+          <div>
+            <strong>${user.name}</strong>
+            <div style="font-size:12px;color:var(--text-muted)">${user.followers.length} متابع • ${user.posts.length} منشور</div>
+          </div>
+        `;
+        div.onclick = () => {
+          viewProfile(user);
+          searchResults.style.display = 'none';
+          searchInput.value = '';
+        };
+        searchResults.appendChild(div);
+      });
+      searchResults.style.display = 'block';
+    }
+
+    // === عرض البروفايل ===
+    function viewProfile(user) {
+      viewingUser = user;
+      // التحقق إذا كنا نتابع هذا المستخدم
+      isFollowingViewingUser = currentUser.following.includes(user.id);
+
+      document.getElementById('pName').textContent = user.name;
+      document.getElementById('pAvatar').textContent = user.avatar;
+      document.getElementById('pBio').textContent = user.bio || 'لا يوجد وصف';
+      
+      document.getElementById('pFollowers').textContent = user.followers.length;
+      document.getElementById('pFollowing').textContent = user.following.length;
+      
+      const userPosts = posts.filter(p => p.authorId === user.id);
+      document.getElementById('pPostsCount').textContent = userPosts.length;
+      
+      // تحديث زر المتابعة
+      const btn = document.getElementById('btnFollow');
+      if (isFollowingViewingUser) {
+        btn.textContent = 'إلغاء المتابعة';
+        btn.className = 'btn btn-outline';
+      } else {
+        btn.textContent = 'متابعة';
+        btn.className = 'btn btn-primary';
+      }
+
+      // عرض المنشورات في الشبكة
+      const grid = document.getElementById('profilePostsGrid');
+      grid.innerHTML = '';
+      userPosts.forEach(post => {
+        const item = document.createElement('div');
+        item.className = 'post-item';
+        item.innerHTML = '️'; // صورة وهمية
+        grid.appendChild(item);
+      });
+
+      // الانتقال لتبويب البروفايل
+      switchTab('account');
+    }
+
+    // === تبديل المتابعة ===
+    function toggleFollow() {
+      if (viewingUser.id === currentUser.id) return; // لا يمكنك متابعة نفسك
+
+      const btn = document.getElementById('btnFollow');
+      if (isFollowingViewingUser) {
+        // إلغاء المتابعة
+        currentUser.following = currentUser.following.filter(id => id !== viewingUser.id);
+        viewingUser.followers = viewingUser.followers.filter(id => id !== currentUser.id);
+        btn.textContent = 'متابعة';
+        btn.className = 'btn btn-primary';
+      } else {
+        // متابعة
+        currentUser.following.push(viewingUser.id);
+        viewingUser.followers.push(currentUser.id);
+        btn.textContent = 'إلغاء المتابعة';
+        btn.className = 'btn btn-outline';
+      }
+      
+      // تحديث الأرقام
+      document.getElementById('pFollowers').textContent = viewingUser.followers.length;
+      document.getElementById('pFollowing').textContent = currentUser.following.length; // إذا كنت في بروفايلك
+      if(viewingUser.id !== currentUser.id) {
+         // تحديث الأرقام للمستخدم الآخر فقط
+      }
+    }
+
+    // === عرض قائمة المتابعين/المتابَعين ===
+    function showList(type) {
+      const modal = document.getElementById('listModal');
+      const title = document.getElementById('listTitle');
+      const content = document.getElementById('listContent');
+      
+      modal.classList.add('open');
+      
+      let list = [];
+      if (type === 'followers') {
+        title.textContent = `متابعو ${viewingUser.name}`;
+        list = viewingUser.followers.map(id => users.find(u => u.id === id) || currentUser);
+      } else {
+        title.textContent = `${viewingUser.name} يتابع`;
+        list = viewingUser.following.map(id => users.find(u => u.id === id) || currentUser);
+      }
+
+      content.innerHTML = '';
+      if (list.length === 0) {
+        content.innerHTML = '<p style="text-align:center; color:var(--text-muted)">لا يوجد مستخدمون</p>';
+      } else {
+        list.forEach(user => {
+          const div = document.createElement('div');
+          div.className = 'search-item'; // نستخدم نفس الستايل
+          div.innerHTML = `<strong>${user.name}</strong>`;
+          div.onclick = () => { viewProfile(user); closeModal(); };
+          content.appendChild(div);
+        });
+      }
+    }
+
+    function closeModal() {
+      document.getElementById('listModal').classList.remove('open');
+    }
+
+    // === المراسلة ===
+    function openChat() {
+      alert(`تم فتح نافذة المحادثة مع ${viewingUser.name} (ميزة تجريبية)`);
+      switchTab('messages');
+    }
+
+    // === التنقل بين التبويبات ===
+    function switchTab(tabId) {
+      document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+      
+      document.querySelectorAll('nav button').forEach(btn => btn.classList.remove('active'));
+      // تحديد الزر النشط في الشريط السفلي
+      const navButtons = document.querySelectorAll('nav button');
+      if(tabId === 'home') navButtons[0].classList.add('active');
+      if(tabId === 'messages') navButtons[1].classList.add('active');
+      if(tabId === 'favorites') navButtons[2].classList.add('active');
+      if(tabId === 'account') navButtons[3].classList.add('active');
+    }
+
+    // === الثيمات ===
+    document.querySelectorAll('.theme-btn').forEach(btn => {
+      btn.onclick = function() {
+        document.body.setAttribute('data-theme', this.textContent);
+      }
+    });
+    
+    // تحميل المنشورات الرئيسية
+    function loadFeed() {
+      const feed = document.getElementById('feedPosts');
+      // عرض آخر المنشورات
+      const latestPosts = [...posts].reverse();
+      latestPosts.forEach(post => {
+        const author = users.find(u => u.id === post.authorId) || currentUser;
+        feed.innerHTML += `
+          <div class="card">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+              <div style="width:40px;height:40px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer" onclick="viewProfile(users.find(u=>u.id===${author.id}))">${author.avatar}</div>
+              <strong>${author.name}</strong>
+            </div>
+            <p>${post.content}</p>
+          </div>
+        `;
+      });
+    }
+    
+    // تهيئة
+    loadFeed();
+
+    // إخفاء نتائج البحث عند الضغط خارجها
+    document.addEventListener('click', function(e) {
+      if (!e.target.closest('.search-box')) {
+        searchResults.style.display = 'none';
+      }
+    });
+  </script>
+</body>
+</html>
