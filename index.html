@@ -1019,7 +1019,30 @@ document.querySelectorAll('.modal-bg').forEach(o=>o.addEventListener('click',e=>
 function showDetails(){document.getElementById('listT').textContent='تفاصيل الموقع';document.getElementById('listC').innerHTML='<div style="padding:20px;line-height:1.8"><p>🎨 <b>معرض رسم</b> - منصة لمشاركة الصور</p><p>📌 رفع صور، متابعة، مراسلة، مفضلة، تحميل الموقع.</p><p>🌙 يدعم تبديل الحسابات (حتى 5 حسابات)</p><p>🎨 ألوان متعددة (كريمي، خوخي، أزرق)</p><div class="divider"></div><p style="text-align:center;color:var(--text-muted);font-size:13px">معرض رسم © 2026</p></div>';document.getElementById('listM').classList.add('open')}
 function installApp(){if(defPrompt){defPrompt.prompt();defPrompt.userChoice.then(r=>{if(r.outcome==='accepted')toast('تم التثبيت');defPrompt=null})}else toast('أضف الموقع للشاشة الرئيسية من المتصفح')}
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();defPrompt=e});
+<script type="module">
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-analytics.js";
+  // TODO: Add SDKs for Firebase products that you want to use
+  // https://firebase.google.com/docs/web/setup#available-libraries
 
+  // Your web app's Firebase configuration
+  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+  const firebaseConfig = {
+    apiKey: "AIzaSyAjaO40IDid2JUhmwxX9fY8epr5EOwyftk",
+    authDomain: "mariam-gallery-4948b.firebaseapp.com",
+    projectId: "mariam-gallery-4948b",
+    storageBucket: "mariam-gallery-4948b.firebasestorage.app",
+    messagingSenderId: "948212795929",
+    appId: "1:948212795929:web:ac9b3041684c733ea7b888",
+    measurementId: "G-QY86MSP7MG"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
+</script>
+  
 // Theme Colors
 function showThemes(){document.getElementById('themeColors').classList.add('open');}
 function setTheme(theme){
